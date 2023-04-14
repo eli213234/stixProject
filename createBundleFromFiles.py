@@ -1,15 +1,18 @@
 from tkinter import *
 from tkinter import filedialog
+from tkcalendar import DateEntry #pip install tkcalendar
 import tkinter as tk
 import ctypes 
-from stix2validator import validate_file, validate_string, print_results,ValidationOptions,validate_instance
-from stix2 import Indicator,ThreatActor,AttackPattern,Bundle, Relationship, parse
-import pyautogui
+from stix2validator import validate_file, validate_string, print_results,ValidationOptions,validate_instance #install
+from stix2 import Indicator,ThreatActor,AttackPattern,Bundle, Relationship, parse #install
+import pyautogui #install
 import json
 import random
 import math
 import string
-import keyboard
+import keyboard#install
+
+from datetime import datetime
 ##create program to open file import jsons- turn to stix objects - combine objects
 def add_obj_array(array, file):
     inputString = ""
@@ -148,19 +151,20 @@ def reference_exists(sourceID, targetId):
 def createStixObject():      
     options = [   
         "attack-pattern",
-     #   "threat-actor",
-      #  "indicator",
-      #  "malware",
-      #  "identity",
-        
+        "threat-actor",
+        "indicator",
+        "malware",
+        "identity",
+        "location"        
     ]  
-    global menu
+
+    global menu, windowButtons, objJson,amount
     def selectMenu(choice):
         global menu
         menu = variable.get()
         choice = variable.get()
     def clicked():
-        global menu
+        global menu, windowButtons, objJson,amount
         amount = number.get()
         if(amount == ''):
             amount = 1  
@@ -171,83 +175,420 @@ def createStixObject():
             if(amount < 0 ):
                 amount = 1
         nam = name.get()
-      #  description = desc.get()
-        for i in range(0, amount):     
-            rnam = nam
-            if(nam == ''):
-                rnam = ''.join(random.choices(string.ascii_uppercase 
-                        + string.digits + string.ascii_lowercase, k=random.randrange(3, 10)))
-            rmenu = menu
-            if(menu == ''):
-                rmenu = options[random.randrange(0, len(options))]
-            objJson = {
-                "name": rnam,
-                "type": rmenu,
-            }   
+        description = desc.get()          
+        rnam = nam
+        if(nam == ''):
+            rnam = ''.join(random.choices(string.ascii_uppercase 
+                    + string.digits + string.ascii_lowercase, k=random.randrange(3, 10)))
+        rmenu = menu
+        if(menu == ''):
+            rmenu = options[random.randrange(0, len(options))]
+        objJson = {
+            "name": rnam,
+            "type": rmenu,
+            "spec_version": "2.1"
+        }   
+        if(description != ''):
+            objJson["description"] = description
         for b in windowButtons:         
             b.destroy()
-        
-       
+        windowButtons = []
+        r = 0
+        t = Label(window ,text = rmenu+":")
+        t.grid(row = 0,column = 0)
+        n = Label(window ,text = rnam)
+        n.grid(row = 0,column = 1)
+        if(rmenu ==  "attack-pattern"):
+           # a = Label(window ,text = "external references")
+           ## a.grid(row = 1,column = 0)
+                        
+     ##       refer = Entry(window)            
+       ##     refer.grid(row = 1,column = 1)
+         ##   windowButtons.append(refer)
+            
+            b = Label(window ,text = "aliases")
+            b.grid(row = 1,column = 0)
+                        
+            alias = Entry(window)            
+            alias.grid(row = 1,column = 1)
+            windowButtons.append(alias)
+   
+    #        c = Label(window ,text = "kill chain phases ")
+     #       c.grid(row = 2,column = 0)    
+            
+  #          kc = Entry(window)
+   #         kc.grid(row = 2,column = 1)
+    #        windowButtons.append(kc)
+            r = 4
+        elif (rmenu ==  "threat-actor"):
+            Label(window ,text = "threat actor types ").grid(row = 1,column = 0)
+            thact = Entry(window)
+            thact.grid(row = 1,column = 1)
+            windowButtons.append(thact)
+            
+            Label(window ,text = "aliases").grid(row = 2,column = 0)
+            alias = Entry(window)
+            alias.grid(row = 2,column = 1)
+            windowButtons.append(alias)
+            
+            Label(window ,text = "first_seen").grid(row = 3,column = 0)
+            first = DateEntry(window, date_pattern='yyyy/MM/dd')
+            first.delete(0, "end")
+            ##first
+            first.grid(row = 3,column = 1)
+            windowButtons.append(first)
+            
+            Label(window ,text = "last_seen").grid(row = 4,column = 0)
+            last = DateEntry(window, date_pattern='yyyy/MM/dd')
+            last.delete(0, "end")
+            last.grid(row = 4,column = 1)
+            windowButtons.append(last)
+            
+            Label(window ,text = "roles").grid(row = 5,column = 0)
+            roles = Entry(window)
+            roles.grid(row = 5,column = 1)
+            windowButtons.append(roles)
+            
+            Label(window ,text = "goals").grid(row = 6,column = 0)
+            goals = Entry(window)
+            goals.grid(row = 6,column = 1)
+            windowButtons.append(goals)
+            
+            Label(window ,text = "sophistication").grid(row = 7,column = 0)
+            sophist = Entry(window)
+            sophist.grid(row = 7,column = 1)
+            windowButtons.append(sophist)
+            
+            Label(window ,text = "resource level").grid(row = 8,column = 0)
+            resource = Entry(window)
+            resource.grid(row = 8,column = 1)
+            windowButtons.append(resource)
+            
+            Label(window ,text = "primary motivation").grid(row = 9,column = 0)
+            motive = Entry(window)
+            motive.grid(row = 9,column = 1)
+            windowButtons.append(motive)
+            
+            r =10
+        elif (rmenu ==  "indicator"):
+            Label(window ,text = "indicator types").grid(row = 1,column = 0)
+            indTypes = Entry(window)
+            indTypes.grid(row = 1,column = 1)
+            windowButtons.append(indTypes)
+            
+            Label(window ,text = "pattern ").grid(row = 2,column = 0)
+            pattern = Entry(window)
+            pattern.grid(row = 2,column = 1)
+            windowButtons.append(pattern)
+            
+            Label(window ,text = "pattern type ").grid(row = 3,column = 0)
+            pattType = Entry(window)
+            pattType.grid(row = 3,column = 1)          
+            windowButtons.append(pattType)
+            
+            Label(window ,text = "valid from ").grid(row = 4,column = 0)
+            valfro = DateEntry(window, date_pattern='yyyy/MM/dd')
+            valfro.delete(0, "end")
+            valfro.grid(row = 4,column = 1)
+            windowButtons.append(valfro)
+            
+            Label(window ,text = "valid until").grid(row = 5,column = 0)
+            valunt = DateEntry(window, date_pattern='yyyy/MM/dd')
+            valunt.delete(0, "end")
+            valunt.grid(row = 5,column = 1)
+            windowButtons.append(valunt)
+            
+            Label(window ,text = "kill chain phases ").grid(row = 6,column = 0)
+            kcp = Entry(window)
+            kcp.grid(row = 6,column = 1)
+            windowButtons.append(kcp)
+            
+            r = 8
+        elif (rmenu ==  "malware"):
+            Label(window ,text = "malware types ").grid(row = 1,column = 0)
+            malTypes = Entry(window)
+            malTypes.grid(row = 1,column = 1)
+            windowButtons.append(malTypes)
+            check = IntVar()
+            Label(window ,text = "is family ").grid(row = 2,column = 0)
+            isfam = Checkbutton(window, variable=check)
+            isfam.grid(row = 2,column = 1)
+            windowButtons.append(check)
+            
+            Label(window ,text = "aliases ").grid(row = 3,column = 0)
+            pattType = Entry(window)
+            pattType.grid(row = 3,column = 1)    
+            windowButtons.append(pattType)
+            
+       #     Label(window ,text = "kill chain phases ").grid(row = 4,column = 0)
+        #    kcp = Entry(window)
+         #   kcp.grid(row = 4,column = 1)
+          #  windowButtons.append(kcp)
+            
+            Label(window ,text = "first seen ").grid(row = 4,column = 0)
+            valfro = DateEntry(window, date_pattern='yyyy/MM/dd')
+            valfro.delete(0, "end")  
+            valfro.grid(row = 4,column = 1)
+            windowButtons.append(valfro)
+            
+            Label(window ,text = "last seen ").grid(row =5,column = 0)
+            valunt = DateEntry(window, date_pattern='yyyy/MM/dd')
+            valunt.delete(0, "end")
+            valunt.grid(row = 5,column = 1)
+            windowButtons.append(valunt)
+            
+            Label(window ,text = "capabilities ").grid(row =6 ,column = 0)
+            kcp = Entry(window)
+            kcp.grid(row = 6,column = 1)
+            windowButtons.append(kcp)
+            
+            r = 8
+        elif (rmenu ==  "identity"):
+            Label(window ,text = "roles ").grid(row = 1,column = 0)
+            malTypes = Entry(window)
+            malTypes.grid(row = 1,column = 1)
+            windowButtons.append(malTypes)
+            
+            Label(window ,text = "sectors").grid(row = 2,column = 0)
+            isfam = Entry(window)
+            isfam.grid(row = 2,column = 1)
+            windowButtons.append(isfam)
+            
+            Label(window ,text = "contact_information").grid(row = 3,column = 0)
+            pattType = Entry(window)
+            pattType.grid(row = 3,column = 1)    
+            windowButtons.append(pattType)
+            
+            r = 5
+        elif (rmenu ==  "location"):
+            
+            Label(window ,text = "region ").grid(row = 1,column = 0)
+            reg = Entry(window)
+            reg.grid(row = 1,column = 1)    
+            windowButtons.append(reg)
+            
+            Label(window ,text = "country ").grid(row = 2,column = 0)
+            kcp = Entry(window)
+            kcp.grid(row = 2,column = 1)
+            windowButtons.append(kcp)
+            
+            Label(window ,text = "city ").grid(row = 3,column = 0)
+            valfro = Entry(window)
+            valfro.grid(row = 3,column = 1)
+            windowButtons.append(valfro)
+            
+            Label(window ,text = "street address  ").grid(row =4,column = 0)
+            valunt = Entry(window)
+            valunt.grid(row = 4,column = 1)
+            windowButtons.append(valunt)
+
+            Label(window ,text = "latitude ").grid(row = 5,column = 0)
+            lati = Entry(window)
+            lati.grid(row = 5,column = 1)
+            windowButtons.append(lati)
+            
+            Label(window ,text = "longitude ").grid(row = 6,column = 0)
+            long = Entry(window)
+            long.grid(row = 6,column = 1)
+            windowButtons.append(long)
+            
+            r = 8
+        sub = filedialog.Button(window ,text="Submit", command = clicked2)
+        sub.grid(row=r,column=0)
+        windowButtons.append(sub)
+        cal = filedialog.Button(window ,text="Cancel", command = window.destroy)
+        cal.grid(row=r,column=1)
     def clicked2():
-        global menu
-        amount = number.get()
-        if(amount == ''):
-            amount = 1  
-        else:
-            amount = int( amount) 
-            if(amount > 20 ):
-                amount = 20
-            if(amount < 0 ):
-                amount = 1
-        nam = name.get()
-      #  description = desc.get()
-        for i in range(0, amount):     
-            rnam = nam
-            if(nam == ''):
-                rnam = ''.join(random.choices(string.ascii_uppercase 
-                        + string.digits + string.ascii_lowercase, k=random.randrange(3, 10)))
-            rmenu = menu
-            if(menu == ''):
-                rmenu = options[random.randrange(0, len(options))]
-            objJson = {
-                "name": rnam,
-                "type": rmenu,
-            }            
-    #        if(description != ''):
-     #           objJson["Description"] = description
-            strJson =  json.dumps(objJson)
-            print(strJson)
-            obj = parse(strJson)                
+        global menu, windowButtons,objJson,amount
+      
+        if(objJson["type"] == "attack-pattern"):            
+            #,text = "external references")
+            
+            aliases = windowButtons[0].get()
+            if(aliases != ''):
+                objJson["aliases"] = aliases.split(',')
+            
+        #    phases = windowButtons[1].get()
+         #   if(phases != ''):
+          #      objJson["kill_chain_phases"] = phases.split(',')
+            # Label(window ,text = "aliases")
+            
+            #c = Label(window ,text = "kill chain phases ")
+        elif(objJson["type"] == "threat-actor"):
+            atype = windowButtons[0].get()
+            if(atype != ''):
+                objJson["threat_actor_types"] = atype.split(',')
+        
+            ali = windowButtons[1].get()
+            if(ali != ''):
+                objJson["aliases"] = ali.split(',')
+    
+            firs = windowButtons[2].get()
+            if(firs != ''):
+                objJson["first_seen"] = datetime.strptime(firs+"T00:00:0.000Z", "%Y/%m/%dT%H:%M:%S.%fZ")     
+      
+            lasts = windowButtons[3].get()
+            if(lasts != ''):
+                objJson["last_seen"] = datetime.strptime(lasts+"T00:00:0.000Z", "%Y/%m/%dT%H:%M:%S.%fZ")          
+ 
+            role = windowButtons[4].get()
+            if(role != ''):
+                objJson["roles"] = role.split(',')
+
+            goals = windowButtons[5].get()
+            if(goals != ''):
+                objJson["goals"] = goals.split(',')          
+  
+            soph = windowButtons[6].get()
+            if(soph != ''):
+                objJson["sophistication"] = soph         
+ 
+            res = windowButtons[6].get()
+            if(res != ''):
+                objJson["resource_level"] = res       
+
+            mot = windowButtons[6].get()
+            if(mot != ''):
+                objJson["primary_motivation"] = mot   
+
+        elif(objJson["type"] == "indicator"):
+            indt = windowButtons[0].get()
+            if(indt != ''):
+                objJson["indicator_types"] = indt.split(',')    
+
+            patt = windowButtons[1].get()
+            if(patt != ''):
+                objJson["pattern"] = patt    
+ 
+            pattype = windowButtons[2].get()
+            if(pattype != ''):
+                objJson["pattern_type"] = pattype    
+
+            valfro = windowButtons[3].get()
+            if(valfro != ''):
+                objJson["valid_from"] = datetime.strptime(valfro+"T00:00:0.000Z", "%Y/%m/%dT%H:%M:%S.%fZ")     
+    
+            valtil = windowButtons[4].get()
+            if(valtil != ''):
+                objJson["valid_until"] = datetime.strptime(valtil+"T00:00:0.000Z", "%Y/%m/%dT%H:%M:%S.%fZ") 
+
+            kchp = windowButtons[5].get()
+            if(kchp != ''):
+                objJson["kill_chain_phases"] = kchp.split(',')          
+        elif(objJson["type"] == "malware"):
+
+            malt = windowButtons[0].get()
+            if(malt != ''):
+                objJson["malware_types"] = malt.split(',')   
+            
+            objJson["is_family"] = windowButtons[1].get() == 1         
+         
+            ali = windowButtons[2].get()
+            if(ali != ''):
+                objJson["aliases"] = ali.split(',') 
+           
+       #     kchp = windowButtons[3].get()
+        #    if(kchp != ''):
+         #       objJson["kill_chain_phases"] = kchp.split(',')      
+                       
+            first = windowButtons[3].get()
+            if(first != ""):
+                objJson["first_seen"] = datetime.strptime(first+"T00:00:0.000Z", "%Y/%m/%dT%H:%M:%S.%fZ")
+            
+            last = windowButtons[4].get()
+            if(last != ""):
+                objJson["last_seen"] = datetime.strptime(last+"T00:00:0.000Z", "%Y/%m/%dT%H:%M:%S.%fZ")
+     
+            capa = windowButtons[5].get()
+            if(capa != ''):
+                objJson["capabilities"] = capa.split(',')  
+
+        elif(objJson["type"] == "identity"):
+            rol = windowButtons[0].get()
+            if(rol != ''):
+                objJson["roles"] = rol.split(',')   
+
+            sec = windowButtons[1].get()
+            if(sec != ''):
+                objJson["sectors"] = sec.split(',')  
+           
+            cont = windowButtons[2].get()
+            if(cont != ''):
+                objJson["contact_information"] = cont
+                
+        elif(objJson["type"] == "location"):            
+           
+            reg = windowButtons[0].get()
+            if(reg != ''):
+                objJson["region"] = reg  
+            else:
+                objJson["region"] = ''.join(random.choices( string.ascii_lowercase, k=random.randrange(3, 10)))  
+            coun = windowButtons[1].get()
+            if(coun != ''):
+                objJson["country"] = coun  
+                
+            cit = windowButtons[2].get()
+            if(cit != ''):
+                objJson["city"] = cit 
+
+            street = windowButtons[3].get()
+            if(street != ''):
+                objJson["street_address"] = street   
+
+            lat = windowButtons[4].get()
+            if(lat != ''):
+                objJson["latitude"] = float(lat)       
+
+            long = windowButtons[5].get()
+            if(long != ''):
+                objJson["longitude"] = float(long)              
+        for i in range(0, amount):                 
+          #  strJson =  json.dumps(objJson)
+           
+            obj = parse(objJson)      
+            print(objJson)          
             add_stix_button(obj)
-            obj_array.append(obj)              
+            obj_array.append(obj)     
+        window.destroy()     
+            
     menu = ""
     window = tk.Toplevel()
-    window.title("Create Stix object part one")
+    window.title("Create Stix object")
     window.geometry('300x300')
     window.configure(background = "white")
     variable = StringVar()
     windowButtons = []
     nam = Label(window ,text = "Name")
-    windowButtons.append(nam)
     nam.grid(row = 0,column = 0)
+    windowButtons.append(nam)
+    
     typ = Label(window ,text = "Type")
     typ.grid(row = 1,column = 0)
     windowButtons.append(typ)
- #   c = Label(window ,text = "Description").grid(row = 2,column = 0)
+    d = Label(window ,text = "Description")
+    d.grid(row = 2,column = 0)
+    windowButtons.append(d)
     num = Label(window ,text = "Number")
-    num.grid(row = 2,column = 0)    
+    num.grid(row = 3,column = 0)    
     windowButtons.append(num)
     name = Entry(window)
     name.grid(row = 0,column = 1)
+    windowButtons.append(name)
     type = OptionMenu( window , variable, *options, command=selectMenu )
     type.grid(row = 1,column = 1)
-    #desc = Entry(window)
-    #desc.grid(row = 2,column = 1)
+    windowButtons.append(type)
+    desc = Entry(window)
+    desc.grid(row = 2,column = 1)
+    windowButtons.append(desc)
     number = Entry(window)
-    number.grid(row = 2,column = 1)#restrict to ints later
-   
-    sub = filedialog.Button(window ,text="Submit", command = clicked).grid(row=5,column=0)
-    cal = filedialog.Button(window ,text="Cancel", command = window.destroy).grid(row=5,column=1)
+    number.grid(row = 3,column = 1)#restrict to ints later
+    windowButtons.append(number)
+    sub = filedialog.Button(window ,text="Submit", command = clicked)
+    sub.grid(row=5,column=0)
+    windowButtons.append(sub)
+    cal = filedialog.Button(window ,text="Cancel", command = window.destroy)
+    cal.grid(row=5,column=1)
+    windowButtons.append(cal)
     window.mainloop()
 
 class StixObject():
