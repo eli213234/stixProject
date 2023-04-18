@@ -455,15 +455,17 @@ def createStixObject():
             indt = windowButtons[0].get()
             if(indt != ''):
                 objJson["indicator_types"] = indt.split(',')    
-
+            
             patt = windowButtons[1].get()
             if(patt != ''):
                 objJson["pattern"] = patt    
- 
+            else:
+                objJson["pattern"] = "pattern"
             pattype = windowButtons[2].get()
             if(pattype != ''):
                 objJson["pattern_type"] = pattype    
-
+            else:
+                objJson["pattern_type"] = "pattern_Type"
             valfro = windowButtons[3].get()
             if(valfro != ''):
                 objJson["valid_from"] = datetime.strptime(valfro+"T00:00:0.000Z", "%Y/%m/%dT%H:%M:%S.%fZ")     
