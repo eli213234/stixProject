@@ -11,7 +11,7 @@ import random
 import math
 import string
 import keyboard#install
-
+import copy
 from datetime import datetime
 ##create program to open file import jsons- turn to stix objects - combine objects
 def add_obj_array(array, file):
@@ -99,8 +99,8 @@ def add_stix_button(stixObj):
     global obj_buttons
     if stixObj.type != 'relationship' :
         stixLab = Label(win, text=stixObj.name +" \n" +stixObj.type,  height= 2, background="gray")
-        xloc =  0 + random.randrange(1, 30)*20
-        yloc = 150 + random.randrange(1, 30)*20
+        xloc =  0 + random.randrange(1, 30)*26
+        yloc = 150 + random.randrange(1, 30)*26
         stixObj =  StixObject(stixLab, id=stixObj.id, x=xloc, y=yloc, dragable = True)
     else:
         stixLab = Label(win, text=stixObj.relationship_type, height= 2, background="gray")
@@ -112,13 +112,12 @@ def add_stix_button(stixObj):
 def lineUpdate():
     
     for o in obj_buttons:
-        if(o.source != None and o.target != None) :
+        if(o.source != None and o.target != None) :            
             if( o.line == None):
                 o.makeLine()
             else:
                 o.updateLine()
-
-	
+       
 #stix obj stuff
 def makeReference(sourceId, targetId):
     global obj_array
@@ -148,6 +147,36 @@ def reference_exists(sourceID, targetId):
             print( "relationship already exist")
             return True
     return False
+def pointDirection(point1x, point1y, point2x, point2y):	
+    top = point2y - point1y
+    bottem = point2x - point1x		
+    return( math.atan2(top,bottem) )
+def pointDistance(point1x, point1y, point2x, point2y):	
+	
+	fir = point2y - point1y
+	sec = point2x - point1x
+		
+	return( math.sqrt( math.pow(fir, 2) + math.pow(sec, 2) ) )
+	
+def lengthDirX( width,  angle ):		
+	
+	return( ( width * math.cos(angle)) )
+
+def lengthDirY( width,  angle ):		
+
+	return( ( width * math.sin(angle)) )    
+def deleteObjects():
+    global obj_array, obj_buttons, sourceObj, targetObj
+    for ob in sourceObj :          
+        ind = obj_buttons.index(ob)
+        b = obj_buttons.pop(ind)
+        b.destroy()
+        obj_array.pop(ind)
+    lineUpdate()
+    
+    sourceObj = []
+    targetObj = []
+   
 def createStixObject():      
     options = [   
         "attack-pattern",
@@ -170,16 +199,16 @@ def createStixObject():
             amount = 1  
         else:
             amount = int( amount) 
-            if(amount > 20 ):
-                amount = 20
+            if(amount > 40 ):
+                amount = 40
             if(amount < 0 ):
                 amount = 1
         nam = name.get()
         description = desc.get()          
         rnam = nam
         if(nam == ''):
-            rnam = ''.join(random.choices(string.ascii_uppercase 
-                    + string.digits + string.ascii_lowercase, k=random.randrange(3, 10)))
+            rnam = "@random"
+   
         rmenu = menu
         if(menu == ''):
             rmenu = options[random.randrange(0, len(options))]
@@ -199,12 +228,7 @@ def createStixObject():
         n = Label(window ,text = rnam)
         n.grid(row = 0,column = 1)
         if(rmenu ==  "attack-pattern"):
-           # a = Label(window ,text = "external references")
-           ## a.grid(row = 1,column = 0)
-                        
-     ##       refer = Entry(window)            
-       ##     refer.grid(row = 1,column = 1)
-         ##   windowButtons.append(refer)
+
             
             b = Label(window ,text = "aliases")
             b.grid(row = 1,column = 0)
@@ -546,9 +570,12 @@ def createStixObject():
                 objJson["longitude"] = float(long)              
         for i in range(0, amount):                 
           #  strJson =  json.dumps(objJson)
-           
-            obj = parse(objJson)      
-            print(objJson)          
+            tmp_json = copy.deepcopy(objJson)
+            if(tmp_json["name"] == "@random"):
+                tmp_json["name"] = ''.join(random.choices(string.ascii_uppercase 
+                    + string.digits + string.ascii_lowercase, k=random.randrange(3, 10)))
+            obj = parse(tmp_json)      
+            print(tmp_json)          
             add_stix_button(obj)
             obj_array.append(obj)     
         window.destroy()     
@@ -644,24 +671,24 @@ class StixObject():
         global sourceObj, targetObj  
         if(self.source == None):      
             if sourceObj == [] or keyboard.is_pressed("Shift"):
-                sourceObj.append( self.id)
+                sourceObj.append( self)
                 event.widget.configure(bg="red")
             else :
                 if(sourceObj.count( self.id) == 0):
                     for ob in sourceObj:
                         if(not reference_exists(ob, self.id) ):
                             targetObj =  self.id
-                            makeReference(ob, targetObj) 
-                            but = find_bottonID(ob)
+                            makeReference(ob.id, targetObj) 
+                            but = find_bottonID(ob.id)
                             but.widget.configure(bg="gray")  
                         else:
-                            but = find_bottonID(ob)
+                            but = find_bottonID(ob.id)
                             but.widget.configure(bg="gray")  
                     sourceObj = []
                     targetObj = []
                 else:
                     for ob in sourceObj:
-                        find_bottonID(ob).widget.configure(bg="gray") 
+                        find_bottonID(ob.id).widget.configure(bg="gray") 
                     event.widget.configure(bg="gray")  
                     sourceObj = []
                     targetObj = []
@@ -672,28 +699,47 @@ class StixObject():
     def destroy(self):
         if( self.line != None):
             canvas.delete(self.line)
-        self.widget.destroy()
+        self.widget.destroy()    
+
     def makeLine(self):       
         sbot = find_bottonID(self.source)
         tbot = find_bottonID(self.target)        
-        if( sbot != None and tbot != None):            
-            self.line = canvas.create_line( sbot.x, sbot.y, tbot.x, tbot.y, tbot.x, tbot.y-30, tbot.x, tbot.y+30)  
+        if( sbot != None and tbot != None): 
+            dir = pointDirection(sbot.x, sbot.y, tbot.x, tbot.y)
+            dis = pointDistance(sbot.x, sbot.y, tbot.x, tbot.y) 
+            xto = sbot.x + lengthDirX(dis*.92, dir)
+            yto = sbot.y + lengthDirY(dis*.92, dir) 
+            arrowX1 = xto + lengthDirX(-45, dir-.52)
+            arrowY1 = yto + lengthDirY(-45, dir-.52)
+            arrowX2 = xto + lengthDirX(-45, dir+.52)
+            arrowY2 = yto + lengthDirY(-45, dir+.52)    
+            self.line = canvas.create_line( sbot.x, sbot.y, xto, yto, xto, yto, arrowX1, arrowY1, xto, yto, arrowX2, arrowY2)  
                       
-            xx = sbot.x + (tbot.x -sbot.x)/2 - self.widget.winfo_reqwidth()/2  
-            yy = sbot.y + (tbot.y -sbot.y)/2 - self.widget.winfo_reqheight()/2
+            xx = sbot.x + (xto -sbot.x)/2 - self.widget.winfo_reqwidth()/2  
+            yy = sbot.y + (yto -sbot.y)/2 - self.widget.winfo_reqheight()/2
             self.widget.place(x=xx, y=yy)
     def updateLine(self):       
         sbot = find_bottonID(self.source)
         tbot = find_bottonID(self.target)        
-        if( sbot != None and tbot != None):            
-            canvas.coords( self.line, sbot.x, sbot.y, tbot.x, tbot.y, tbot.x, tbot.y-30, tbot.x, tbot.y+30)      
-            xx = sbot.x + (tbot.x -sbot.x)/2 - self.widget.winfo_reqwidth()/2  
-            yy = sbot.y + (tbot.y -sbot.y)/2 - self.widget.winfo_reqheight()/2
-            self.widget.place(x=xx, y=yy)                    
+        if( sbot != None and tbot != None): 
+            dir = pointDirection(sbot.x, sbot.y, tbot.x, tbot.y)
+            dis = pointDistance(sbot.x, sbot.y, tbot.x, tbot.y) 
+            xto = sbot.x + lengthDirX(dis*.92, dir)
+            yto = sbot.y + lengthDirY(dis*.92, dir) 
+            arrowX1 = xto + lengthDirX(-45, dir-.52)
+            arrowY1 = yto + lengthDirY(-45, dir-.52)
+            arrowX2 = xto + lengthDirX(-45, dir+.52)
+            arrowY2 = yto + lengthDirY(-45, dir+.52)         
+            canvas.coords( self.line, sbot.x, sbot.y, xto, yto, xto, yto, arrowX1, arrowY1, xto, yto, arrowX2, arrowY2)    
+            xx = sbot.x + (xto -sbot.x)/2 - self.widget.winfo_reqwidth()/2  
+            yy = sbot.y + (yto -sbot.y)/2 - self.widget.winfo_reqheight()/2
+            self.widget.place(x=xx, y=yy)    
+        else:
+            self.destroy()        
 
 # Create an instance of window
 win=Tk()
-canvas = Canvas(width=1000, height=800)
+canvas = Canvas(width=2000, height=1600)
 sourceObj = []
 targetObj = []
 # Set the geometry of the window
@@ -719,6 +765,9 @@ makeBut = Button(win, text="MakeObj", command=createStixObject)
 makeBut.pack()
 makeBut = Button(win, text="MakeBuddle", command=createBundle)
 makeBut.pack()
+
+delBut = Button(win, text="DeleteObjects", command=deleteObjects)
+delBut.place(relx = 0.85, rely = 0.05, anchor ='nw')
 
 canvas.place(x = 0, y =0)
 
