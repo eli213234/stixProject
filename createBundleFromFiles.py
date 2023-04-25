@@ -98,12 +98,12 @@ def createBundle():
 def add_stix_button(stixObj):
     global obj_buttons
     if stixObj.type != 'relationship' :
-        stixLab = Label(win, text=stixObj.name +" \n" +stixObj.type,  height= 2, background="gray")
+        stixLab = Label(win, text=stixObj.name +" \n" +stixObj.type,  height= 2, background="lightgray")
         xloc =  0 + random.randrange(1, 30)*26
         yloc = 150 + random.randrange(1, 30)*26
         stixObj =  StixObject(stixLab, id=stixObj.id, x=xloc, y=yloc, dragable = True)
     else:
-        stixLab = Label(win, text=stixObj.relationship_type, height= 2, background="gray")
+        stixLab = Label(win, text=stixObj.relationship_type, height= 2, background="lightgray")
         xloc =  20 + random.randrange(1, 20)*20
         yloc = 150 + random.randrange(1, 20)*20
         stixObj =  StixObject(stixLab, id=stixObj.id, x=xloc, y=yloc, dragable = False, source = stixObj.source_ref, target = stixObj.target_ref)
@@ -171,7 +171,7 @@ def deleteObjects():
         ind = obj_buttons.index(ob)
         b = obj_buttons.pop(ind)
         b.destroy()
-        obj_array.pop(ind)
+      
     lineUpdate()
     
     sourceObj = []
@@ -680,27 +680,31 @@ class StixObject():
                             targetObj =  self.id
                             makeReference(ob.id, targetObj) 
                             but = find_bottonID(ob.id)
-                            but.widget.configure(bg="gray")  
+                            but.widget.configure(bg="lightgray")  
                         else:
                             but = find_bottonID(ob.id)
-                            but.widget.configure(bg="gray")  
+                            but.widget.configure(bg="lightgray")  
                     sourceObj = []
                     targetObj = []
                 else:
                     for ob in sourceObj:
-                        find_bottonID(ob.id).widget.configure(bg="gray") 
-                    event.widget.configure(bg="gray")  
+                        find_bottonID(ob.id).widget.configure(bg="lightgray") 
+                    event.widget.configure(bg="lightgray")  
                     sourceObj = []
                     targetObj = []
             
             
     def no_click(self, event):
-        event.widget.configure(bg="gray")  
+        event.widget.configure(bg="lightgray")  
     def destroy(self):
+        
         if( self.line != None):
             canvas.delete(self.line)
         self.widget.destroy()    
-
+        for o in obj_array:
+            if(o.id == self.id):
+                obj_array.remove(o)
+                print(o.id)
     def makeLine(self):       
         sbot = find_bottonID(self.source)
         tbot = find_bottonID(self.target)        
@@ -735,7 +739,9 @@ class StixObject():
             yy = sbot.y + (yto -sbot.y)/2 - self.widget.winfo_reqheight()/2
             self.widget.place(x=xx, y=yy)    
         else:
-            self.destroy()        
+            self.destroy()     
+      
+            
 
 # Create an instance of window
 win=Tk()
